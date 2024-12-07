@@ -10,13 +10,13 @@ class Category(models.Model):
     name = models.CharField(
         max_length=256,
         verbose_name='Название',
-        help_text='Необходимо названия котегории'
+        help_text='Необходимое названия котегории'
     )
     slug = models.SlugField(
         max_length=50,
         unique=True,
         verbose_name='Индификатор',
-        help_text='Необходим индификатор категории',
+        help_text='Необходимый индификатор категории',
     )
 
     class Meta:
@@ -32,13 +32,13 @@ class Genre(models.Model):
     name = models.CharField(
         max_length=256,
         verbose_name='Название',
-        help_text='Необходимо названия жанра',
+        help_text='Необходимое названия жанра',
     )
     slug = models.SlugField(
         max_length=50,
         unique=True,
         verbose_name='Идентификатор',
-        help_text='Необходим индификатор жанра',
+        help_text='Необходимый индификатор жанра',
     )
 
     class Meta:
@@ -54,14 +54,14 @@ class Title(models.Model):
     name = models.CharField(
         max_length=256,
         verbose_name='Название',
-        help_text='Необходимо названия произведения',
+        help_text='Необходимое название произведения',
     )
 
     description = models.TextField(
         null=True,
         blank=True,
         verbose_name='Описание',
-        help_text='Необходимо описание',
+        help_text='Необходимое описание',
     )
 
     year = models.IntegerField(
@@ -107,7 +107,7 @@ class GenreTitle(models.Model):
         Genre,
         on_delete=models.CASCADE,
         verbose_name='Жанр',
-        help_text='Необходим жанр',
+        help_text='Необходимый жанр',
     )
 
     def __str__(self):
