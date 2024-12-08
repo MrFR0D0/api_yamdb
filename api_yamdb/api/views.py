@@ -98,6 +98,12 @@ class TitleViewSet(viewsets.ModelViewSet):
             return TitleReadSerializer
         return TitleWriteSerializer
 
+    def update(self, request, *args, **kwargs):
+        """Отключает метод PUT, поддерживается только PATCH"""
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
@@ -114,6 +120,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
             Title,
             id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, title=title)
+
+    def update(self, request, *args, **kwargs):
+        """Отключает метод PUT, поддерживается только PATCH"""
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 class CommentsViewSet(viewsets.ModelViewSet):
@@ -135,6 +147,12 @@ class CommentsViewSet(viewsets.ModelViewSet):
             title__id=self.kwargs.get('title_id')
         )
         return review.comments.all()
+
+    def update(self, request, *args, **kwargs):
+        """Отключает метод PUT, поддерживается только PATCH"""
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
