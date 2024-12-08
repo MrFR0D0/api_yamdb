@@ -1,9 +1,6 @@
 from django.apps import AppConfig
 
 
-class ApiConfig(AppConfig):
-<<<<<<< HEAD
-=======
+class UsersConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
->>>>>>> users
-    name = 'api'
+    name = 'users'
