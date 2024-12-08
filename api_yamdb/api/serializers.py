@@ -1,46 +1,3 @@
-<<<<<<< HEAD
-from rest_framework import serializers
-from reviews.models import Category, Genre, Title
-
-
-class CategorySerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Category
-        exclude = ('id',)
-
-
-class GenreSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Genre
-        exclude = ('id',)
-
-
-class TitleSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(
-        queryset=Genre.objects.all(), slug_field='slug', many=True
-    )
-    category = serializers.SlugRelatedField(
-        queryset=Category.objects.all(), slug_field='slug'
-    )
-
-    class Meta:
-        model = Title
-        fields = ('id', 'name', 'year', 'description',
-                  'genre', 'category')
-
-
-class ReadTitleSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
-    genre = GenreSerializer(read_only=True, many=True)
-    rating = serializers.IntegerField(read_only=True)
-
-    class Meta:
-        model = Title
-        fields = (
-            'id', 'name', 'year', 'description', 'genre', 'category', 'rating',
-=======
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -50,7 +7,7 @@ from reviews.models import Category, Comments, Genre, Review, Title
 from reviews.validators import validate_title_year
 from users.models import User
 
-USERNAME_CHECK = r'^[\w.@+-]+$'  # Проверка имени на отсутствие спецсимволов
+USERNAME_CHECK = r'^[\w.@+-]+$'
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -179,5 +136,4 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role'
->>>>>>> users
         )
