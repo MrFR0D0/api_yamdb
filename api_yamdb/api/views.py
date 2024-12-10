@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from api.filters import FilterTitle
-from api.mixins import ModelMixinSet, UpdateViewSet, UpdateMixin
+from api.mixins import ModelMixinSet, UpdateMixin
 from api.permissions import (IsAdminModeratorAuthorOrReadOnly, IsAdminOrStaff,
                              IsAdminUserOrReadOnly)
 from api.serializers import (AuthTokenSerializer, CategorySerializer,
@@ -99,7 +99,6 @@ class TitleViewSet(UpdateMixin, viewsets.ModelViewSet):
         return TitleWriteSerializer
 
 
-
 class ReviewViewSet(UpdateMixin, viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminModeratorAuthorOrReadOnly, )
@@ -112,8 +111,6 @@ class ReviewViewSet(UpdateMixin, viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, title=self.get_title())
-
-
 
 
 class CommentsViewSet(UpdateMixin, viewsets.ModelViewSet):
@@ -132,7 +129,6 @@ class CommentsViewSet(UpdateMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.get_review().comments.all()
-
 
 
 class UsersViewSet(viewsets.ModelViewSet):
