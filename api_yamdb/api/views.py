@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from api.filters import FilterTitle
-from api.mixins import ModelMixinSet
+from api.mixins import ModelMixinSet, UpdateViewSet, UpdateMixin
 from api.permissions import (IsAdminModeratorAuthorOrReadOnly, IsAdminOrStaff,
                              IsAdminUserOrReadOnly)
 from api.serializers import (AuthTokenSerializer, CategorySerializer,
@@ -85,7 +85,7 @@ class GenreViewSet(ModelMixinSet):
     lookup_field = 'slug'
 
 
-class TitleViewSet(viewsets.ModelViewSet):
+class TitleViewSet(UpdateMixin, viewsets.ModelViewSet):
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
     ).all()
@@ -98,61 +98,41 @@ class TitleViewSet(viewsets.ModelViewSet):
             return TitleReadSerializer
         return TitleWriteSerializer
 
-    def update(self, request, *args, **kwargs):
-        """Отключает метод PUT, поддерживается только PATCH"""
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
 
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(UpdateMixin, viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminModeratorAuthorOrReadOnly, )
 
+    def get_title(self):
+        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+
     def get_queryset(self):
-        title = get_object_or_404(
-            Title,
-            id=self.kwargs.get('title_id'))
-        return title.reviews.all()
+        return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(
-            Title,
-            id=self.kwargs.get('title_id'))
-        serializer.save(author=self.request.user, title=title)
-
-    def update(self, request, *args, **kwargs):
-        """Отключает метод PUT, поддерживается только PATCH"""
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
+        serializer.save(author=self.request.user, title=self.get_title())
 
 
-class CommentsViewSet(viewsets.ModelViewSet):
+
+
+class CommentsViewSet(UpdateMixin, viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
     permission_classes = (IsAdminModeratorAuthorOrReadOnly, )
 
-    def perform_create(self, serializer):
-        review = get_object_or_404(
+    def get_review(self):
+        return get_object_or_404(
             Review,
             id=self.kwargs.get('review_id'),
             title__id=self.kwargs.get('title_id')
         )
-        serializer.save(author=self.request.user, review=review)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user, review=self.get_review())
 
     def get_queryset(self):
-        review = get_object_or_404(
-            Review,
-            id=self.kwargs.get('review_id'),
-            title__id=self.kwargs.get('title_id')
-        )
-        return review.comments.all()
+        return self.get_review().comments.all()
 
-    def update(self, request, *args, **kwargs):
-        """Отключает метод PUT, поддерживается только PATCH"""
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
