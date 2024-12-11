@@ -21,8 +21,11 @@ router.register(
 )
 router.register('users', UsersViewSet, basename='users')
 
-urlpatterns = [
-    path('v1/auth/signup/', signup, name='user-registration'),
-    path('v1/auth/token/', get_token, name='user_get_token'),
-    path('v1/', include(router.urls)),
+
+api = [
+    path('auth/signup/', signup, name='user-registration'),
+    path('auth/token/', get_token, name='user_get_token'),
+    path('', include(router.urls)),
 ]
+
+urlpatterns = [path('v1/', include(api))]

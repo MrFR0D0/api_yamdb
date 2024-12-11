@@ -1,13 +1,10 @@
-from django.conf import settings
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from api.permissions import IsAdminOrStaff
+from api_yamdb import constants
 from reviews.models import Category, Comments, Genre, Review, Title
 from reviews.validators import validate_title_year
 from users.models import User
-
-USERNAME_CHECK = r'^[\w.@+-]+$'
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -18,13 +15,13 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 class AuthTokenSerializer(serializers.Serializer):
     username = serializers.RegexField(
-        regex=USERNAME_CHECK,
-        max_length=150,
+        regex=constants.USERNAME_CHECK,
+        max_length=constants.MAX_USERNAME_LENGHT,
         required=True
     )
     confirmation_code = serializers.CharField(
         required=True,
-        max_length=16,
+        max_length=constants.MAX_CONFCODE_LENGHT,
     )
 
 
@@ -32,23 +29,22 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
         fields = ('name', 'slug')
-        lookup_field = 'slug'
 
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ('name', 'slug')
-        lookup_field = 'slug'
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(
         read_only=True,
-        many=True
+        many=True,
+        allow_empty=False
     )
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.IntegerField(read_only=True, default=1)
 
     class Meta:
         fields = '__all__'
@@ -65,6 +61,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         slug_field='slug',
         many=True
     )
+    year = serializers.IntegerField()
 
     class Meta:
         fields = '__all__'
@@ -84,11 +81,15 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True
     )
 
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'title', 'author', 'score', 'pub_date')
+
     def validate_score(self, value):
-        if settings.MIN_SCORE_VALUE > value > settings.MAX_SCORE_VALUE:
+        if constants.MIN_SCORE_VALUE > value > constants.MAX_SCORE_VALUE:
             raise serializers.ValidationError(
-                (f'Оценка должна быть от {settings.MIN_SCORE_VALUE}'
-                 f'до {settings.MAX_SCORE_VALUE}!')
+                (f'Оценка должна быть от {constants.MIN_SCORE_VALUE}'
+                 f'до {constants.MAX_SCORE_VALUE}!')
             )
         return value
 
@@ -106,10 +107,6 @@ class ReviewSerializer(serializers.ModelSerializer):
             )
         return data
 
-    class Meta:
-        fields = '__all__'
-        model = Review
-
 
 class CommentsSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -124,12 +121,10 @@ class CommentsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comments
-        fields = '__all__'
-        read_only_fields = ('pub_date',)
+        fields = ('id', 'text', 'author', 'review', 'pub_date')
 
 
 class UserSerializer(serializers.ModelSerializer):
-    permission_classes = (IsAdminOrStaff,)
 
     class Meta:
         model = User
