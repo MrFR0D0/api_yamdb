@@ -1,13 +1,23 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from api_yamdb import constants
 from reviews.validators import validate_title_year
 from users.models import User
 
-from api_yamdb import constants
 
+class SlugNameClass(models.Model):
+    name = models.CharField(
+        max_length=constants.MAX_CATEGORYNAME_LENGHT,
+        verbose_name='Название',
+        help_text='Необходимое названия'
+    )
+    slug = models.SlugField(
+        unique=True,
+        verbose_name='Индификатор',
+        help_text='Необходимый индификатор',
+    )
 
-class BaseClass(models.Model):
     class Meta:
         abstract = True
         ordering = ('name',)
@@ -16,36 +26,14 @@ class BaseClass(models.Model):
         return self.name
 
 
-class Category(BaseClass):
-    name = models.CharField(
-        max_length=constants.MAX_CATEGORYNAME_LENGHT,
-        verbose_name='Название',
-        help_text='Необходимое названия котегории'
-    )
-    slug = models.SlugField(
-        unique=True,
-        verbose_name='Индификатор',
-        help_text='Необходимый индификатор категории',
-    )
-
-    class Meta:
+class Category(SlugNameClass):
+    class Meta(SlugNameClass.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
 
-class Genre(BaseClass):
-    name = models.CharField(
-        max_length=constants.MAX_GENRENAME_LENGHT,
-        verbose_name='Название',
-        help_text='Необходимое названия жанра',
-    )
-    slug = models.SlugField(
-        unique=True,
-        verbose_name='Идентификатор',
-        help_text='Необходимый индификатор жанра',
-    )
-
-    class Meta:
+class Genre(SlugNameClass):
+    class Meta(SlugNameClass.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
@@ -115,26 +103,25 @@ class GenreTitle(models.Model):
 
 
 class BaseClassRewCom(models.Model):
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор отзыва',
+        help_text='Пользователь, который оставил отзыв',
+    )
+
     class Meta:
         abstract = True
-        ordering = ('name',)
+        ordering = ('pub_date',)
 
     def __str__(self) -> str:
         return self.text[:constants.MAX_STR_LENGHT]
 
 
 class Review(BaseClassRewCom):
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='reviews',
-        verbose_name='Автор отзыва',
-        help_text='Пользователь, который оставил отзыв',
-    )
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='reviews',
         verbose_name='Произведение',
         help_text='Выберите произведение, к которому хотите оставить отзыв',
     )
@@ -161,7 +148,8 @@ class Review(BaseClassRewCom):
         help_text='Дата публикации отзыва, проставляется автоматически.',
     )
 
-    class Meta:
+    class Meta(BaseClassRewCom.Meta):
+        default_related_name = 'reviews'
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = (
@@ -173,17 +161,9 @@ class Review(BaseClassRewCom):
 
 
 class Comments(BaseClassRewCom):
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='comments',
-        verbose_name='Автор комментария',
-        help_text='Пользователь, который оставил комментарий'
-    )
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        related_name='comments',
         verbose_name='Отзыв',
         help_text='Отзыв, к которому оставляют комментарий'
     )
@@ -197,6 +177,7 @@ class Comments(BaseClassRewCom):
         help_text='Дата публикации проставляется автоматически'
     )
 
-    class Meta:
+    class Meta(BaseClassRewCom.Meta):
+        default_related_name = 'comments'
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'

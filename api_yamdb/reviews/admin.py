@@ -31,7 +31,7 @@ class ReviewAdmin(admin.ModelAdmin):
 
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('pk', 'author', 'review', 'text', 'pub_date')
-    search_fields = ('author', 'review')
+    search_fields = ('author__username', 'review')
     list_filter = ('author', 'review', 'pub_date')
     empty_value_display = '-пусто-'
 
