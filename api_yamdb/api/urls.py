@@ -1,9 +1,8 @@
-from django.urls import include, path
-from rest_framework.routers import DefaultRouter
-
 from api.views import (CategoryViewSet, CommentsViewSet, GenreViewSet,
                        ReviewViewSet, TitleViewSet, UsersViewSet, get_token,
                        signup)
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
 router.register('categories', CategoryViewSet, basename='categories')
@@ -20,7 +19,6 @@ router.register(
     basename='comments'
 )
 router.register('users', UsersViewSet, basename='users')
-
 
 api = [
     path('auth/signup/', signup, name='user-registration'),

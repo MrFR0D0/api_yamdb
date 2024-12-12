@@ -1,14 +1,5 @@
-from django.conf import settings
-from django.db.models import Avg
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-
 from api.filters import FilterTitle
-from api.mixins import ModelMixinSet
+from api.mixins import ModelMixinSet, UpdateMixin
 from api.permissions import (IsAdminModeratorAuthorOrReadOnly, IsAdminOrStaff,
                              IsAdminUserOrReadOnly)
 from api.serializers import (AuthTokenSerializer, CategorySerializer,
@@ -17,10 +8,18 @@ from api.serializers import (AuthTokenSerializer, CategorySerializer,
                              TitleReadSerializer, TitleWriteSerializer,
                              UserSerializer)
 from api.utils import send_confirmation_code_to_email
+from django.conf import settings
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
 from reviews.models import Category, Genre, Review, Title
 from users.models import User
 from users.token import get_tokens_for_user
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 
 @api_view(('POST',))
@@ -72,43 +71,30 @@ class CategoryViewSet(ModelMixinSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (IsAdminUserOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
 class GenreViewSet(ModelMixinSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (IsAdminUserOrReadOnly,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
-class TitleViewSet(viewsets.ModelViewSet):
+class TitleViewSet(UpdateMixin, viewsets.ModelViewSet):
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
     ).all()
+    ordering_fields = ('rating', 'name',)
     permission_classes = (IsAdminUserOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
-    ordering_fields = ('name',)
-    ordering = ('name',)
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return TitleReadSerializer
         return TitleWriteSerializer
 
-    def update(self, request, *args, **kwargs):
-        """Отключает метод PUT, поддерживается только PATCH"""
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
-
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(UpdateMixin, viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (
         IsAdminModeratorAuthorOrReadOnly,
@@ -127,14 +113,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, title=self.get_title())
 
-    def update(self, request, *args, **kwargs):
-        """Отключает метод PUT, поддерживается только PATCH."""
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
-
-class CommentsViewSet(viewsets.ModelViewSet):
+class CommentsViewSet(UpdateMixin, viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
     permission_classes = (
         IsAdminModeratorAuthorOrReadOnly,
@@ -153,12 +133,6 @@ class CommentsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.get_review().comments.all()
-
-    def update(self, request, *args, **kwargs):
-        """Отключает метод PUT, поддерживается только PATCH."""
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
 
 class UsersViewSet(viewsets.ModelViewSet):

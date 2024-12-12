@@ -3,30 +3,10 @@ from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 
 from api_yamdb import constants
-from api_yamdb.settings import NOT_ALLOWED_USERNAME
+from django.conf import settings
 
 
-class MyUserManager(UserManager):
-    """Сохраняет пользователя только с email.
-    Зарезервированное имя использовать нельзя."""
-    def create_user(self, username, email, password, **extra_fields):
-        if not email:
-            raise ValueError('Поле email обязательное')
-        if username == NOT_ALLOWED_USERNAME:
-            raise ValueError(
-                f'Использование имени пользователя '
-                f'{NOT_ALLOWED_USERNAME} запрещено!'
-            )
-        return super().create_user(
-            username, email=email, password=password, **extra_fields)
-
-    def create_superuser(
-            self, username, email, password, role='admin', **extra_fields):
-        return super().create_superuser(
-            username, email, password, role='admin', **extra_fields)
-
-
-class CustomUser(AbstractUser):
+class User(AbstractUser):
     """Модель пользователя."""
     USER = 'user'
     MODERATOR = 'moderator'

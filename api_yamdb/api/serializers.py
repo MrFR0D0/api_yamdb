@@ -1,10 +1,10 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-
-from api_yamdb import constants
 from reviews.models import Category, Comments, Genre, Review, Title
 from reviews.validators import validate_title_year
 from users.models import User
+
+from api_yamdb import constants
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -44,7 +44,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
         many=True,
         allow_empty=False
     )
-    rating = serializers.IntegerField(read_only=True, default=1)
+    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         fields = '__all__'
@@ -72,24 +72,19 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    title = serializers.SlugRelatedField(
-        slug_field='name',
-        read_only=True
-    )
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True
     )
-
-    class Meta:
-        model = Review
-        fields = ('id', 'text', 'title', 'author', 'score', 'pub_date')
+    score = serializers.IntegerField()
 
     def validate_score(self, value):
-        if constants.MIN_SCORE_VALUE > value > constants.MAX_SCORE_VALUE:
+        if not (
+            constants.MIN_SCORE_VALUE <= value <= constants.MAX_SCORE_VALUE
+        ):
             raise serializers.ValidationError(
-                (f'Оценка должна быть от {constants.MIN_SCORE_VALUE}'
-                 f'до {constants.MAX_SCORE_VALUE}!')
+                f'Оценка должна быть от {constants.MIN_SCORE_VALUE} '
+                f'до {constants.MAX_SCORE_VALUE}!'
             )
         return value
 
@@ -107,6 +102,10 @@ class ReviewSerializer(serializers.ModelSerializer):
             )
         return data
 
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+
 
 class CommentsSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -114,14 +113,10 @@ class CommentsSerializer(serializers.ModelSerializer):
         slug_field='username',
         default=serializers.CurrentUserDefault()
     )
-    review = serializers.SlugRelatedField(
-        slug_field='text',
-        read_only=True
-    )
 
     class Meta:
         model = Comments
-        fields = ('id', 'text', 'author', 'review', 'pub_date')
+        fields = ('id', 'text', 'author', 'pub_date')
 
 
 class UserSerializer(serializers.ModelSerializer):
