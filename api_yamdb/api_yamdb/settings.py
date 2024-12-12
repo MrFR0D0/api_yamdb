@@ -27,8 +27,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_filters',
     'users',
-    'api',
     'reviews',
+    'api',
 ]
 
 MIDDLEWARE = [
@@ -131,9 +131,5 @@ SIMPLE_JWT = {
 }
 
 
-MIN_SCORE_VALUE = 1
-MAX_SCORE_VALUE = 10
-
 ADMIN_EMAIL = 'admin@yamdb.com'
-CONFIRMATION_CODE_LENGTH = 16
 NOT_ALLOWED_USERNAME = 'me'
