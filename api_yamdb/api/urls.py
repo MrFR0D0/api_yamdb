@@ -20,9 +20,13 @@ router.register(
 )
 router.register('users', UsersViewSet, basename='users')
 
+auth = [
+    path('signup/', signup, name='user-registration'),
+    path('token/', get_token, name='user_get_token'),
+]
+
 api = [
-    path('auth/signup/', signup, name='user-registration'),
-    path('auth/token/', get_token, name='user_get_token'),
+    path('auth/', include(auth)),
     path('', include(router.urls)),
 ]
 

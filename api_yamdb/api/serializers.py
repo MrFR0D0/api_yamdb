@@ -3,7 +3,7 @@ from rest_framework import serializers
 from reviews.models import Category, Comments, Genre, Review, Title
 from reviews.validators import validate_title_year
 from users.models import User
-
+from django.db.models import Avg
 from api_yamdb import constants
 
 
@@ -44,7 +44,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
         many=True,
         allow_empty=False
     )
-    rating = serializers.IntegerField(read_only=True, default=0)
+    rating = serializers.IntegerField(read_only=True, default=None)
 
     class Meta:
         fields = '__all__'
@@ -59,9 +59,11 @@ class TitleWriteSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
-        many=True
+        many=True,
+        allow_empty=False
     )
     year = serializers.IntegerField()
+    rating = serializers.IntegerField(read_only=True, default=None)
 
     class Meta:
         fields = '__all__'
@@ -69,6 +71,12 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
     def validate_year(self, value):
         return validate_title_year(value)
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        rating = instance.reviews.aggregate(Avg('score'))['score__avg']
+        data['rating'] = rating if rating is not None else 0
+        return data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
