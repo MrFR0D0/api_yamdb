@@ -83,12 +83,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='username',
         read_only=True
     )
+    score = serializers.IntegerField()
 
     def validate_score(self, value):
-        if settings.MIN_SCORE_VALUE > value > settings.MAX_SCORE_VALUE:
+        if not (settings.MIN_SCORE_VALUE <= value <= settings.MAX_SCORE_VALUE):
             raise serializers.ValidationError(
-                (f'Оценка должна быть от {settings.MIN_SCORE_VALUE}'
-                 f'до {settings.MAX_SCORE_VALUE}!')
+                f'Оценка должна быть от {settings.MIN_SCORE_VALUE} '
+                f'до {settings.MAX_SCORE_VALUE}!'
             )
         return value
 
