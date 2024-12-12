@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
 from api.filters import FilterTitle
-from api.mixins import ModelMixinSet
+from api.mixins import ModelMixinSet, UpdateOnlyPATCHMixin
 from api.permissions import (IsAdminModeratorAuthorOrReadOnly, IsAdminOrStaff,
                              IsAdminUserOrReadOnly)
 from api.serializers import (AuthTokenSerializer, CategorySerializer,
@@ -85,7 +85,7 @@ class GenreViewSet(ModelMixinSet):
     lookup_field = 'slug'
 
 
-class TitleViewSet(viewsets.ModelViewSet):
+class TitleViewSet(UpdateOnlyPATCHMixin, viewsets.ModelViewSet):
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
     ).all()
@@ -98,14 +98,8 @@ class TitleViewSet(viewsets.ModelViewSet):
             return TitleReadSerializer
         return TitleWriteSerializer
 
-    def update(self, request, *args, **kwargs):
-        """Отключает метод PUT, поддерживается только PATCH"""
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
-
-class ReviewViewSet(viewsets.ModelViewSet):
+class ReviewViewSet(UpdateOnlyPATCHMixin, viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (IsAdminModeratorAuthorOrReadOnly, )
 
@@ -121,14 +115,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
             id=self.kwargs.get('title_id'))
         serializer.save(author=self.request.user, title=title)
 
-    def update(self, request, *args, **kwargs):
-        """Отключает метод PUT, поддерживается только PATCH"""
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
-
-class CommentsViewSet(viewsets.ModelViewSet):
+class CommentsViewSet(UpdateOnlyPATCHMixin, viewsets.ModelViewSet):
     serializer_class = CommentsSerializer
     permission_classes = (IsAdminModeratorAuthorOrReadOnly, )
 
@@ -147,12 +135,6 @@ class CommentsViewSet(viewsets.ModelViewSet):
             title__id=self.kwargs.get('title_id')
         )
         return review.comments.all()
-
-    def update(self, request, *args, **kwargs):
-        """Отключает метод PUT, поддерживается только PATCH"""
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
