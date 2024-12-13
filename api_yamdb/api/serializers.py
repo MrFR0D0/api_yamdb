@@ -61,6 +61,15 @@ class AuthTokenSerializer(serializers.Serializer):
         max_length=constants.MAX_CONFCODE_LENGHT,
     )
 
+    # def validate_confirmation_code(self, username):
+    #     user = get_object_or_404(User, username=request.data['username'])
+    #     confirmation_code = self.data.get('confirmation_code')
+    #     if not confirmation_code == str(self.user.confirmation_code):
+    #         raise serializers.ValidationError(
+    #             "Ошибка кода подтверждения."
+    #         )
+    #     return True
+
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:

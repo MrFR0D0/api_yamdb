@@ -20,38 +20,36 @@ from rest_framework.response import Response
 from reviews.models import Category, Genre, Review, Title
 from users.models import User
 from users.token import get_tokens_for_user
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 
 
 @api_view(('POST',))
 @permission_classes((AllowAny,))
 def signup(request):
-    username = request.data.get('username')
-    if User.objects.filter(username=username).exists():
-        user = get_object_or_404(User, username=username)
-        serializer = SignUpSerializer(
-            user, data=request.data, partial=True
-        )
-        serializer.is_valid(raise_exception=True)
-        if serializer.validated_data['email'] != user.email:
-            return Response(
-                'Почта указана неверно!', status=status.HTTP_400_BAD_REQUEST
-            )
-        serializer.save()
-        send_confirmation_code_to_email(username)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    if serializer.validated_data['username'] != settings.NOT_ALLOWED_USERNAME:
-        serializer.save()
-        send_confirmation_code_to_email(username)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    email = serializer.validated_data['email']
+    username = serializer.validated_data['username']
+    user, created = User.objects.get_or_create(
+        email=email,
+        username=username
+    )
+    if not created:
+        user.email = email
+        user.username = username
+        user.save()
+    confirmation_code = default_token_generator.make_token(user)
+    send_mail(
+        'Код подтверждения',
+        f'{confirmation_code}',
+        f'{settings.ADMIN_EMAIL}',
+        [f'{email}'],
+        fail_silently=False,
+    )
     return Response(
-        (
-            f'Использование имени пользователя '
-            f'{settings.NOT_ALLOWED_USERNAME} запрещено!'
-        ),
-        status=status.HTTP_400_BAD_REQUEST
+        serializer.data,
+        status=status.HTTP_200_OK
     )
 
 
