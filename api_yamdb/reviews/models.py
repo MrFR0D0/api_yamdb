@@ -161,7 +161,7 @@ class Review(BaseClassRewCom):
         )
 
 
-class Comments(BaseClassRewCom):
+class Comment(BaseClassRewCom):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,

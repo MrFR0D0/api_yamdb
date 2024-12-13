@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from api_yamdb import constants
-from reviews.models import Category, Comments, Genre, Review, Title
+from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.validators import validate_title_year
 from users.models import User
 
@@ -116,7 +116,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return data
 
 
-class CommentsSerializer(serializers.ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username',
@@ -124,7 +124,7 @@ class CommentsSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Comments
+        model = Comment
         fields = ('id', 'text', 'author', 'pub_date')
 
 

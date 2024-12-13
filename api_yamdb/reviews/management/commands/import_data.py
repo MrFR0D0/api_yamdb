@@ -3,7 +3,7 @@ from csv import DictReader
 from django.core.management.base import BaseCommand
 
 from api_yamdb.settings import BASE_DIR
-from reviews.models import Category, Comments, Genre, GenreTitle, Review, Title
+from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
 from users.models import User
 
 
@@ -97,19 +97,19 @@ class Command(BaseCommand):
             print('Данные для Review загружены')
 
     def import_comments(self):
-        if Comments.objects.exists():
-            print('Данные для Comments уже загружены')
+        if Comment.objects.exists():
+            print('Данные для Comment уже загружены')
         else:
             for row in DictReader(open(
                     BASE_DIR / 'static/data/comments.csv',
                     encoding='utf8')):
-                Comments.objects.create(
+                Comment.objects.create(
                     id=row['id'],
                     review_id=row['review_id'],
                     text=row['text'],
                     author=User.objects.get(id=row['author']),
                     pub_date=row['pub_date'],)
-            print('Данные для Comments загружены')
+            print('Данные для Comment загружены')
 
     def handle(self, *args, **kwargs):
         self.import_user()

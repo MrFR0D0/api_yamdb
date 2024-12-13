@@ -3,7 +3,7 @@ from api.mixins import ModelMixinSet, UpdateMixin
 from api.permissions import (IsAdminModeratorAuthorOrReadOnly, IsAdminOrStaff,
                              IsAdminUserOrReadOnly)
 from api.serializers import (AuthTokenSerializer, CategorySerializer,
-                             CommentsSerializer, GenreSerializer,
+                             CommentSerializer, GenreSerializer,
                              ReviewSerializer, SignUpSerializer,
                              TitleReadSerializer, TitleWriteSerializer,
                              UserSerializer)
@@ -112,8 +112,8 @@ class ReviewViewSet(UpdateMixin, viewsets.ModelViewSet):
         serializer.save(author=self.request.user, title=self.get_title())
 
 
-class CommentsViewSet(UpdateMixin, viewsets.ModelViewSet):
-    serializer_class = CommentsSerializer
+class CommentViewSet(UpdateMixin, viewsets.ModelViewSet):
+    serializer_class = CommentSerializer
     permission_classes = (
         IsAdminModeratorAuthorOrReadOnly,
         IsAuthenticatedOrReadOnly,

@@ -1,4 +1,4 @@
-from api.views import (CategoryViewSet, CommentsViewSet, GenreViewSet,
+from api.views import (CategoryViewSet, CommentViewSet, GenreViewSet,
                        ReviewViewSet, TitleViewSet, UsersViewSet, get_token,
                        signup)
 from django.urls import include, path
@@ -15,7 +15,7 @@ router.register(
 )
 router.register(
     r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
-    CommentsViewSet,
+    CommentViewSet,
     basename='comments'
 )
 router.register('users', UsersViewSet, basename='users')
