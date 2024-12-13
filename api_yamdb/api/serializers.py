@@ -1,10 +1,11 @@
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+
+from api_yamdb import constants
 from reviews.models import Category, Comments, Genre, Review, Title
 from reviews.validators import validate_title_year
 from users.models import User
-from django.db.models import Avg
-from api_yamdb import constants
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -86,6 +87,10 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
     score = serializers.IntegerField()
 
+    class Meta:
+        model = Review
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+
     def validate_score(self, value):
         if not (
             constants.MIN_SCORE_VALUE <= value <= constants.MAX_SCORE_VALUE
@@ -109,10 +114,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                 'Может существовать только один отзыв!'
             )
         return data
-
-    class Meta:
-        model = Review
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
 
 class CommentsSerializer(serializers.ModelSerializer):

@@ -109,6 +109,15 @@ class BaseClassRewCom(models.Model):
         verbose_name='Автор отзыва',
         help_text='Пользователь, который оставил отзыв',
     )
+    text = models.TextField(
+        verbose_name='Текст',
+        help_text='Текст, который пишет пользователь'
+    )
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата публикации',
+        help_text='Дата публикации проставляется автоматически'
+    )
 
     class Meta:
         abstract = True
@@ -125,9 +134,6 @@ class Review(BaseClassRewCom):
         verbose_name='Произведение',
         help_text='Выберите произведение, к которому хотите оставить отзыв',
     )
-    text = models.TextField(
-        verbose_name='Текст отзыва',
-    )
     score = models.PositiveSmallIntegerField(
         validators=(
             MinValueValidator(constants.MIN_SCORE_VALUE),
@@ -141,11 +147,6 @@ class Review(BaseClassRewCom):
         },
         verbose_name='Оценка произведения',
         help_text='Укажите оценку произведения'
-    )
-    pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Дата публикации',
-        help_text='Дата публикации отзыва, проставляется автоматически.',
     )
 
     class Meta(BaseClassRewCom.Meta):
@@ -166,15 +167,6 @@ class Comments(BaseClassRewCom):
         on_delete=models.CASCADE,
         verbose_name='Отзыв',
         help_text='Отзыв, к которому оставляют комментарий'
-    )
-    text = models.TextField(
-        verbose_name='Текст комментария',
-        help_text='Текст комментария, который пишет пользователь'
-    )
-    pub_date = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Дата публикации комментария',
-        help_text='Дата публикации проставляется автоматически'
     )
 
     class Meta(BaseClassRewCom.Meta):
