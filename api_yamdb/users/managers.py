@@ -5,6 +5,7 @@ from django.conf import settings
 
 class UserManager(UserManager):
     """Сохраняет пользователя только с email."""
+
     def create_user(self, username, email, password, **extra_fields):
         if not email:
             raise ValueError('Поле email обязательное')

@@ -1,6 +1,7 @@
+from django.conf import settings
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
-from rest_framework import serializers
+from rest_framework import serializers, status
 
 from api_yamdb import constants
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -9,9 +10,44 @@ from users.models import User
 
 
 class SignUpSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(
+        max_length=constants.MAX_EMAIL_LENGHT, required=True)
+    username = serializers.RegexField(
+        regex=constants.USERNAME_CHECK,
+        max_length=constants.MAX_USERNAME_LENGHT
+    )
+
     class Meta:
         model = User
         fields = ('email', 'username')
+
+    def validate_username(self, username):
+        if username == settings.NOT_ALLOWED_USERNAME:
+            raise serializers.ValidationError(
+                "Имя 'me' для username запрещено."
+            )
+        return username
+
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        is_user_exists = User.objects.filter(username=username).exists()
+        is_email_exists = User.objects.filter(email=email).exists()
+        if is_user_exists:
+            user = User.objects.get(username=username)
+            if user.email != email:
+                raise serializers.ValidationError(
+                    {"detail": "Неверно указан email пользователя"},
+                    status.HTTP_400_BAD_REQUEST,
+                )
+        if is_email_exists:
+            user = User.objects.get(email=email)
+            if user.username != username:
+                raise serializers.ValidationError(
+                    {"detail": "Пользователь с таким email уже существует"},
+                    status.HTTP_400_BAD_REQUEST,
+                )
+        return data
 
 
 class AuthTokenSerializer(serializers.Serializer):

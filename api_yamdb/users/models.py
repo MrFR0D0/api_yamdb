@@ -1,12 +1,24 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from rest_framework import serializers
 
 from api_yamdb import constants
+from users.validators import username_validator
+
+
+def validate_username(self, username):
+    if username == settings.NOT_ALLOWED_USERNAME:
+        raise serializers.ValidationError(
+            "Имя 'me' для username запрещено."
+        )
+    return username
 
 
 class User(AbstractUser):
     """Модель пользователя."""
+
     USER = 'user'
     MODERATOR = 'moderator'
     ADMIN = 'admin'
@@ -15,6 +27,12 @@ class User(AbstractUser):
         (USER, 'Аутентифицированный пользователь'),
         (MODERATOR, 'Модератор'),
         (ADMIN, 'Админ'),
+    )
+    username = models.CharField(
+        verbose_name='username',
+        max_length=constants.MAX_USERNAME_LENGHT,
+        unique=True,
+        validators=[username_validator],
     )
     role = models.CharField(
         max_length=constants.MAX_ROLE_LENGHT,
@@ -47,12 +65,6 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('username',)
-        constraints = (
-            models.UniqueConstraint(
-                fields=('username', 'email'),
-                name='unique_username_email'
-            ),
-        )
 
     def __str__(self):
         return self.username
