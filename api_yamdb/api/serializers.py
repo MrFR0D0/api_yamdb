@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 
@@ -31,16 +30,16 @@ class SignUpSerializer(serializers.ModelSerializer):
     def validate(self, data):
         username = data.get('username')
         email = data.get('email')
-        is_user_exists = User.objects.filter(username=username).exists()
-        is_email_exists = User.objects.filter(email=email).exists()
-        if is_user_exists:
+        user_exists = User.objects.filter(username=username).exists()
+        email_exists = User.objects.filter(email=email).exists()
+        if user_exists:
             user = User.objects.get(username=username)
             if user.email != email:
                 raise serializers.ValidationError(
                     {"detail": "Неверно указан email пользователя"},
                     status.HTTP_400_BAD_REQUEST,
                 )
-        if is_email_exists:
+        if email_exists:
             user = User.objects.get(email=email)
             if user.username != username:
                 raise serializers.ValidationError(
@@ -61,14 +60,14 @@ class AuthTokenSerializer(serializers.Serializer):
         max_length=constants.MAX_CONFCODE_LENGHT,
     )
 
-    # def validate_confirmation_code(self, username):
-    #     user = get_object_or_404(User, username=request.data['username'])
-    #     confirmation_code = self.data.get('confirmation_code')
-    #     if not confirmation_code == str(self.user.confirmation_code):
-    #         raise serializers.ValidationError(
-    #             "Ошибка кода подтверждения."
-    #         )
-    #     return True
+    def validate(self, data):
+        user = get_object_or_404(User, username=data['username'])
+        if str(user.confirmation_code) != data['confirmation_code']:
+            raise serializers.ValidationError(
+                {'confirmation_code': 'Ошибка кода подтверждения.'}
+            )
+        data['user'] = user
+        return data
 
 
 class GenreSerializer(serializers.ModelSerializer):

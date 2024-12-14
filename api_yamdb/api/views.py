@@ -1,3 +1,15 @@
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
+
 from api.filters import FilterTitle
 from api.mixins import ModelMixinSet, UpdateMixin
 from api.permissions import (IsAdminModeratorAuthorOrReadOnly, IsAdminOrStaff,
@@ -7,21 +19,9 @@ from api.serializers import (AuthTokenSerializer, CategorySerializer,
                              ReviewSerializer, SignUpSerializer,
                              TitleReadSerializer, TitleWriteSerializer,
                              UserSerializer)
-from api.utils import send_confirmation_code_to_email
-from django.conf import settings
-from django.db.models import Avg
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
-from rest_framework.response import Response
 from reviews.models import Category, Genre, Review, Title
 from users.models import User
 from users.token import get_tokens_for_user
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 
 
 @api_view(('POST',))
@@ -29,40 +29,37 @@ from django.core.mail import send_mail
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    email = serializer.validated_data['email']
-    username = serializer.validated_data['username']
+    validated_data = serializer.validated_data
     user, created = User.objects.get_or_create(
-        email=email,
-        username=username
+        email=validated_data['email'],
+        username=validated_data['username'],
+        defaults=validated_data
     )
+
     if not created:
-        user.email = email
-        user.username = username
+        for key, value in validated_data.items():
+            setattr(user, key, value)
         user.save()
+
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         'Код подтверждения',
-        f'{confirmation_code}',
-        f'{settings.ADMIN_EMAIL}',
-        [f'{email}'],
+        f'Ваш код подтверждения: {confirmation_code}',
+        settings.ADMIN_EMAIL,
+        [validated_data['email']],
         fail_silently=False,
     )
-    return Response(
-        serializer.data,
-        status=status.HTTP_200_OK
-    )
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(('POST',))
-@permission_classes((AllowAny,))
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def get_token(request):
     serializer = AuthTokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    user = get_object_or_404(User, username=request.data['username'])
-    confirmation_code = serializer.data.get('confirmation_code')
-    if confirmation_code == str(user.confirmation_code):
-        return Response(get_tokens_for_user(user), status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    user = serializer.validated_data['user']
+    return Response(get_tokens_for_user(user), status=status.HTTP_200_OK)
 
 
 class CategoryViewSet(ModelMixinSet):
