@@ -88,9 +88,8 @@ class TitleReadSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(
         read_only=True,
         many=True,
-        allow_empty=False
     )
-    rating = serializers.IntegerField(read_only=True, default=None)
+    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         fields = '__all__'
@@ -106,23 +105,18 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         slug_field='slug',
         many=True,
-        allow_empty=False
     )
     year = serializers.IntegerField()
-    rating = serializers.IntegerField(read_only=True, default=None)
 
     class Meta:
         fields = '__all__'
         model = Title
 
+    def to_representation(self, instance):
+        return TitleReadSerializer(instance).data
+
     def validate_year(self, value):
         return validate_title_year(value)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        rating = instance.reviews.aggregate(Avg('score'))['score__avg']
-        data['rating'] = rating if rating is not None else 0
-        return data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
