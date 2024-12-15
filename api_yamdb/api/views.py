@@ -1,6 +1,3 @@
-from django.conf import settings
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -29,27 +26,7 @@ from users.token import get_tokens_for_user
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    validated_data = serializer.validated_data
-    user, created = User.objects.get_or_create(
-        email=validated_data['email'],
-        username=validated_data['username'],
-        defaults=validated_data
-    )
-
-    if not created:
-        for key, value in validated_data.items():
-            setattr(user, key, value)
-        user.save()
-
-    confirmation_code = default_token_generator.make_token(user)
-    send_mail(
-        'Код подтверждения',
-        f'Ваш код подтверждения: {confirmation_code}',
-        settings.ADMIN_EMAIL,
-        [validated_data['email']],
-        fail_silently=False,
-    )
-
+    serializer.save()
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 

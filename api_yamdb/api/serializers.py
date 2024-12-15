@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 
@@ -6,6 +8,7 @@ from api_yamdb import constants
 from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.validators import validate_title_year
 from users.models import User
+from users.validators import validate_username
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -13,19 +16,13 @@ class SignUpSerializer(serializers.ModelSerializer):
         max_length=constants.MAX_EMAIL_LENGHT, required=True)
     username = serializers.RegexField(
         regex=constants.USERNAME_CHECK,
-        max_length=constants.MAX_USERNAME_LENGHT
+        max_length=constants.MAX_USERNAME_LENGHT,
+        validators=[validate_username]
     )
 
     class Meta:
         model = User
         fields = ('email', 'username')
-
-    def validate_username(self, username):
-        if username == settings.NOT_ALLOWED_USERNAME:
-            raise serializers.ValidationError(
-                "Имя 'me' для username запрещено."
-            )
-        return username
 
     def validate(self, data):
         username = data.get('username')
@@ -48,6 +45,22 @@ class SignUpSerializer(serializers.ModelSerializer):
                 )
         return data
 
+    def create(self, validated_data):
+        user, created = User.objects.get_or_create(
+            email=validated_data['email'],
+            username=validated_data['username'],
+        )
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            'Код подтверждения',
+            f'Ваш код подтверждения: {confirmation_code}',
+            settings.ADMIN_EMAIL,
+            [validated_data['email']],
+            fail_silently=False,
+        )
+
+        return user
+
 
 class AuthTokenSerializer(serializers.Serializer):
     username = serializers.RegexField(
@@ -55,16 +68,17 @@ class AuthTokenSerializer(serializers.Serializer):
         max_length=constants.MAX_USERNAME_LENGHT,
         required=True
     )
-    confirmation_code = serializers.CharField(
-        required=True,
-        max_length=constants.MAX_CONFCODE_LENGHT,
-    )
 
     def validate(self, data):
         user = get_object_or_404(User, username=data['username'])
-        if str(user.confirmation_code) != data['confirmation_code']:
+        token = data.get('token')
+        if not token:
             raise serializers.ValidationError(
-                {'confirmation_code': 'Ошибка кода подтверждения.'}
+                {'token': 'Токен не может быть пустым.'}
+            )
+        if not default_token_generator.check_token(user, token):
+            raise serializers.ValidationError(
+                {'token': 'Ошибка токена.'}
             )
         data['user'] = user
         return data
@@ -104,6 +118,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         slug_field='slug',
         many=True,
+        allow_empty=False
     )
     year = serializers.IntegerField()
 

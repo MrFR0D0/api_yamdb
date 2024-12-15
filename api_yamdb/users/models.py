@@ -1,19 +1,9 @@
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from rest_framework import serializers
 
 from api_yamdb import constants
 from users.validators import username_validator
-
-
-def validate_username(self, username):
-    if username == settings.NOT_ALLOWED_USERNAME:
-        raise serializers.ValidationError(
-            "Имя 'me' для username запрещено."
-        )
-    return username
 
 
 class User(AbstractUser):
@@ -53,12 +43,6 @@ class User(AbstractUser):
         unique=True,
         verbose_name='Электронная почта пользователя',
         help_text='Введите свой электронный адрес'
-    )
-
-    confirmation_code = models.CharField(
-        blank=True,
-        verbose_name='Код для авторизации',
-        max_length=constants.MAX_CONFCODE_LENGHT,
     )
 
     class Meta:
