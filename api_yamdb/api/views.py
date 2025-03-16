@@ -24,6 +24,7 @@ from users.token import get_tokens_for_user
 @api_view(('POST',))
 @permission_classes((AllowAny,))
 def signup(request):
+    """Функция для регистрации пользователя."""
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
@@ -33,6 +34,7 @@ def signup(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def get_token(request):
+    """Функция для получения токена."""
     serializer = AuthTokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user = serializer.validated_data['user']
@@ -40,20 +42,26 @@ def get_token(request):
 
 
 class CategoryViewSet(ModelMixinSet):
+    """Вьюсет для категорий."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 class GenreViewSet(ModelMixinSet):
+    """Вьюсет для жанров."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class TitleViewSet(UpdateMixin, viewsets.ModelViewSet):
+    """Вьюсет для заголовков."""
+
     queryset = Title.objects.annotate(
-        rating=Avg('reviews__score')
+        rating=Avg('reviews__score'),
     ).all()
-    ordering_fields = ('rating', 'name',)
+    ordering_fields = ('rating', 'name')
     permission_classes = (IsAdminUserOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = FilterTitle
@@ -65,6 +73,8 @@ class TitleViewSet(UpdateMixin, viewsets.ModelViewSet):
 
 
 class ReviewViewSet(UpdateMixin, viewsets.ModelViewSet):
+    """Вьюсет для отзывов."""
+
     serializer_class = ReviewSerializer
     permission_classes = (
         IsAdminModeratorAuthorOrReadOnly,
@@ -74,7 +84,7 @@ class ReviewViewSet(UpdateMixin, viewsets.ModelViewSet):
     def get_title(self):
         return get_object_or_404(
             Title,
-            id=self.kwargs.get('title_id')
+            id=self.kwargs.get('title_id'),
         )
 
     def get_queryset(self):
@@ -85,6 +95,8 @@ class ReviewViewSet(UpdateMixin, viewsets.ModelViewSet):
 
 
 class CommentViewSet(UpdateMixin, viewsets.ModelViewSet):
+    """Вьюсет для комментариев."""
+
     serializer_class = CommentSerializer
     permission_classes = (
         IsAdminModeratorAuthorOrReadOnly,
@@ -95,7 +107,7 @@ class CommentViewSet(UpdateMixin, viewsets.ModelViewSet):
         return get_object_or_404(
             Review,
             id=self.kwargs.get('review_id'),
-            title__id=self.kwargs.get('title_id')
+            title__id=self.kwargs.get('title_id'),
         )
 
     def perform_create(self, serializer):
@@ -106,23 +118,25 @@ class CommentViewSet(UpdateMixin, viewsets.ModelViewSet):
 
 
 class UsersViewSet(viewsets.ModelViewSet):
+    """Вьюсет для пользователей."""
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAdminOrStaff,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('=username',)
     lookup_field = 'username'
-    http_method_names = ('get', 'post', 'patch', 'delete',)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     @action(
-        methods=('get', 'patch',),
+        methods=('get', 'patch'),
         detail=False,
         permission_classes=(IsAuthenticated,),
     )
     def me(self, request):
         if request.method == 'PATCH':
             serializer = UserSerializer(
-                request.user, data=request.data, partial=True
+                request.user, data=request.data, partial=True,
             )
             serializer.is_valid(raise_exception=True)
             serializer.save(role=request.user.role)

@@ -9,6 +9,8 @@ ADDITIONAL_USER_FIELDS = (
 
 
 class UserAdmin(BaseUserAdmin):
+    """Класс администрирования пользователя."""
+
     list_display = (
         'pk',
         'username',
@@ -17,31 +19,40 @@ class UserAdmin(BaseUserAdmin):
         'email',
         'bio',
         'role',
-        'confirmation_code'
+        # 'confirmation_code',
     )
 
     list_editable = ('role',)
 
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': (
-            'first_name', 'last_name', 'email', 'bio'
-        )}),
-        ('Permissions', {'fields': (
-            'is_active', 'is_staff',
-            'is_superuser', 'groups', 'user_permissions'
-        )}),
+        (
+            'Personal info',
+            {'fields': ('first_name', 'last_name', 'email', 'bio')},
+        ),
+        (
+            'Permissions',
+            {
+                'fields': (
+                    'is_active', 'is_staff',
+                    'is_superuser', 'groups', 'user_permissions',
+                ),
+            },
+        ),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
-        ('Custom Fields', {'fields': ('role', 'confirmation_code',)}),
+        ('Custom Fields', {'fields': ('role', 'confirmation_code')}),
     )
 
     add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': (
-                'username', 'email', 'first_name',
-                'last_name', 'password', 'bio', 'role', 'confirmation_code')
-        }),
+        (
+            None, {
+                'classes': ('wide',),
+                'fields': (
+                    'username', 'email', 'first_name', 'last_name',
+                    'password', 'bio', 'role', 'confirmation_code',
+                ),
+            },
+        ),
     )
 
 

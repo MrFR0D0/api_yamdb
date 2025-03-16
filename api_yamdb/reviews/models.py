@@ -7,10 +7,12 @@ from users.models import User
 
 
 class SlugNameClass(models.Model):
+    """Класс слаг."""
+
     name = models.CharField(
         max_length=constants.MAX_CATEGORYNAME_LENGHT,
         verbose_name='Название',
-        help_text='Необходимое названия'
+        help_text='Необходимое названия',
     )
     slug = models.SlugField(
         unique=True,
@@ -27,18 +29,24 @@ class SlugNameClass(models.Model):
 
 
 class Category(SlugNameClass):
+    """Класс категорий."""
+
     class Meta(SlugNameClass.Meta):
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
 
 
 class Genre(SlugNameClass):
+    """Класс жанров."""
+
     class Meta(SlugNameClass.Meta):
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
 
 
 class Title(models.Model):
+    """Класс заголовков."""
+
     name = models.CharField(
         max_length=constants.MAX_TITLENAME_LENGHT,
         verbose_name='Название',
@@ -55,7 +63,7 @@ class Title(models.Model):
     year = models.SmallIntegerField(
         verbose_name='Дата выхода',
         help_text='Укажите дату выхода',
-        validators=(validate_title_year,)
+        validators=(validate_title_year,),
     )
 
     category = models.ForeignKey(
@@ -84,6 +92,8 @@ class Title(models.Model):
 
 
 class GenreTitle(models.Model):
+    """Вспомогательный класс, связывающий жанры и произведения."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -103,6 +113,8 @@ class GenreTitle(models.Model):
 
 
 class BaseClassRewCom(models.Model):
+    """Базовый класс для отзывов и комментариев."""
+
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -111,12 +123,12 @@ class BaseClassRewCom(models.Model):
     )
     text = models.TextField(
         verbose_name='Текст',
-        help_text='Текст, который пишет пользователь'
+        help_text='Текст, который пишет пользователь',
     )
     pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата публикации',
-        help_text='Дата публикации проставляется автоматически'
+        help_text='Дата публикации проставляется автоматически',
     )
 
     class Meta:
@@ -128,6 +140,8 @@ class BaseClassRewCom(models.Model):
 
 
 class Review(BaseClassRewCom):
+    """Класс отзывов."""
+
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -137,16 +151,16 @@ class Review(BaseClassRewCom):
     score = models.PositiveSmallIntegerField(
         validators=(
             MinValueValidator(constants.MIN_SCORE_VALUE),
-            MaxValueValidator(constants.MAX_SCORE_VALUE)
+            MaxValueValidator(constants.MAX_SCORE_VALUE),
         ),
         error_messages={
             'validators': (
                 f'Оценка должна быть от {constants.MIN_SCORE_VALUE}'
                 f'до {constants.MAX_SCORE_VALUE}!'
-            )
+            ),
         },
         verbose_name='Оценка произведения',
-        help_text='Укажите оценку произведения'
+        help_text='Укажите оценку произведения',
     )
 
     class Meta(BaseClassRewCom.Meta):
@@ -162,11 +176,13 @@ class Review(BaseClassRewCom):
 
 
 class Comment(BaseClassRewCom):
+    """Класс комментариев."""
+
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         verbose_name='Отзыв',
-        help_text='Отзыв, к которому оставляют комментарий'
+        help_text='Отзыв, к которому оставляют комментарий',
     )
 
     class Meta(BaseClassRewCom.Meta):

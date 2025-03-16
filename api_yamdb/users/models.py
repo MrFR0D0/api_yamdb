@@ -29,20 +29,20 @@ class User(AbstractUser):
         choices=CHOICES,
         default=USER,
         verbose_name='Уровень доступа пользователя',
-        help_text='Уровень доступа пользователя'
+        help_text='Уровень доступа пользователя',
     )
 
     bio = models.TextField(
         max_length=constants.MAX_BIO_LENGHT,
         blank=True,
         verbose_name='Заметка о пользователе',
-        help_text='Напишите заметку о себе'
+        help_text='Напишите заметку о себе',
     )
 
     email = models.EmailField(
         unique=True,
         verbose_name='Электронная почта пользователя',
-        help_text='Введите свой электронный адрес'
+        help_text='Введите свой электронный адрес',
     )
 
     class Meta:

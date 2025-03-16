@@ -12,12 +12,19 @@ from users.validators import validate_username
 
 
 class SignUpSerializer(serializers.ModelSerializer):
+    """Класс сериализатора.
+
+    Проверяет корректность данных, указанных при регистрации.
+    """
+
     email = serializers.EmailField(
-        max_length=constants.MAX_EMAIL_LENGHT, required=True)
+        max_length=constants.MAX_EMAIL_LENGHT,
+        required=True,
+    )
     username = serializers.RegexField(
         regex=constants.USERNAME_CHECK,
         max_length=constants.MAX_USERNAME_LENGHT,
-        validators=[validate_username]
+        validators=[validate_username],
     )
 
     class Meta:
@@ -33,14 +40,14 @@ class SignUpSerializer(serializers.ModelSerializer):
             user = User.objects.get(username=username)
             if user.email != email:
                 raise serializers.ValidationError(
-                    {"detail": "Неверно указан email пользователя"},
+                    {'detail': 'Неверно указан email пользователя'},
                     status.HTTP_400_BAD_REQUEST,
                 )
         if email_exists:
             user = User.objects.get(email=email)
             if user.username != username:
                 raise serializers.ValidationError(
-                    {"detail": "Пользователь с таким email уже существует"},
+                    {'detail': 'Пользователь с таким email уже существует'},
                     status.HTTP_400_BAD_REQUEST,
                 )
         return data
@@ -63,40 +70,57 @@ class SignUpSerializer(serializers.ModelSerializer):
 
 
 class AuthTokenSerializer(serializers.Serializer):
+    """Класс сериализатора.
+
+    Проверяет токен пользователя при аутентификации.
+    """
+
     username = serializers.RegexField(
         regex=constants.USERNAME_CHECK,
         max_length=constants.MAX_USERNAME_LENGHT,
-        required=True
+        required=True,
     )
 
     def validate(self, data):
-        user = get_object_or_404(User, username=data['username'])
+        user = get_object_or_404(
+            User,
+            username=data['username'],
+        )
         token = data.get('token')
         if not token:
             raise serializers.ValidationError(
-                {'token': 'Токен не может быть пустым.'}
+                {'token': 'Токен не может быть пустым.'},
             )
         if not default_token_generator.check_token(user, token):
             raise serializers.ValidationError(
-                {'token': 'Ошибка токена.'}
+                {'token': 'Ошибка токена.'},
             )
         data['user'] = user
         return data
 
 
 class GenreSerializer(serializers.ModelSerializer):
+    """Класс сериализатор жанров."""
+
     class Meta:
         model = Genre
         fields = ('name', 'slug')
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Класс сериализатор жанров."""
+
     class Meta:
         model = Category
         fields = ('name', 'slug')
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
+    """Класс сериализатора.
+
+    Сериализует данные заголовков на чтение.
+    """
+
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(
         read_only=True,
@@ -110,15 +134,20 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
+    """Класс сериализатора.
+
+    Сериализует данные заголовков на запись.
+    """
+
     category = serializers.SlugRelatedField(
         queryset=Category.objects.all(),
-        slug_field='slug'
+        slug_field='slug',
     )
     genre = serializers.SlugRelatedField(
         queryset=Genre.objects.all(),
         slug_field='slug',
         many=True,
-        allow_empty=False
+        allow_empty=False,
     )
     year = serializers.IntegerField()
 
@@ -134,9 +163,14 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """Класс сериализатора.
+
+    Сериализует данные отзывов.
+    """
+
     author = serializers.SlugRelatedField(
         slug_field='username',
-        read_only=True
+        read_only=True,
     )
     score = serializers.IntegerField()
 
@@ -150,7 +184,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         ):
             raise serializers.ValidationError(
                 f'Оценка должна быть от {constants.MIN_SCORE_VALUE} '
-                f'до {constants.MAX_SCORE_VALUE}!'
+                f'до {constants.MAX_SCORE_VALUE}!',
             )
         return value
 
@@ -164,16 +198,21 @@ class ReviewSerializer(serializers.ModelSerializer):
             and Review.objects.filter(title=title, author=author).exists()
         ):
             raise serializers.ValidationError(
-                'Может существовать только один отзыв!'
+                'Может существовать только один отзыв!',
             )
         return data
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Класс сериализатора.
+
+    Сериализует данные комментариев.
+    """
+
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username',
-        default=serializers.CurrentUserDefault()
+        default=serializers.CurrentUserDefault(),
     )
 
     class Meta:
@@ -182,10 +221,11 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Класс сериализатор жанров."""
 
     class Meta:
         model = User
         fields = (
             'username', 'email', 'first_name',
-            'last_name', 'bio', 'role'
+            'last_name', 'bio', 'role',
         )

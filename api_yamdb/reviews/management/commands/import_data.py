@@ -8,12 +8,14 @@ from users.models import User
 
 
 class Command(BaseCommand):
-    help = 'Импорт данных из csv файлов'
+    """Класс импорта данных из csv файлов."""
+
+    command_help = 'Импорт данных из csv файлов'
 
     def import_user(self):
         if User.objects.exists():
             self.stdout.write(self.style.WARNING(
-                'Данные для User уже загружены'
+                'Данные для User уже загружены',
             ))
         else:
             for row in DictReader(open(
@@ -28,13 +30,13 @@ class Command(BaseCommand):
                     first_name=row['first_name'],
                     last_name=row['last_name'])
             self.stdout.write(self.style.SUCCESS(
-                'Данные для User загружены'
+                'Данные для User загружены',
             ))
 
     def import_genre(self):
         if Genre.objects.exists():
             self.stdout.write(self.style.WARNING(
-                'Данные для Genre уже загружены'
+                'Данные для Genre уже загружены',
             ))
         else:
             for row in DictReader(open(
@@ -45,13 +47,13 @@ class Command(BaseCommand):
                     name=row['name'],
                     slug=row['slug'])
             self.stdout.write(self.style.SUCCESS(
-                'Данные для Genre загружены'
+                'Данные для Genre загружены',
             ))
 
     def import_category(self):
         if Category.objects.exists():
             self.stdout.write(self.style.WARNING(
-                'Данные для Category уже загружены'
+                'Данные для Category уже загружены',
             ))
         else:
             for row in DictReader(open(
@@ -62,13 +64,13 @@ class Command(BaseCommand):
                     name=row['name'],
                     slug=row['slug'])
             self.stdout.write(self.style.SUCCESS(
-                'Данные для Category загружены'
+                'Данные для Category загружены',
             ))
 
     def import_title(self):
         if Title.objects.exists():
             self.stdout.write(self.style.WARNING(
-                'Данные для Title уже загружены'
+                'Данные для Title уже загружены',
             ))
         else:
             for row in DictReader(open(
@@ -80,13 +82,13 @@ class Command(BaseCommand):
                     year=row['year'],
                     category=Category.objects.get(id=row['category']))
             self.stdout.write(self.style.SUCCESS(
-                'Данные для Title загружены'
+                'Данные для Title загружены',
             ))
 
     def import_genre_title(self):
         if GenreTitle.objects.exists():
             self.stdout.write(self.style.WARNING(
-                'Данные для GenreTitle уже загружены'
+                'Данные для GenreTitle уже загружены',
             ))
         else:
             for row in DictReader(open(
@@ -97,13 +99,13 @@ class Command(BaseCommand):
                     title_id=row['title_id'],
                     genre_id=row['genre_id'])
             self.stdout.write(self.style.SUCCESS(
-                'Данные для GenreTitle загружены'
+                'Данные для GenreTitle загружены',
             ))
 
     def import_review(self):
         if Review.objects.exists():
             self.stdout.write(self.style.WARNING(
-                'Данные для Review уже загружены'
+                'Данные для Review уже загружены',
             ))
         else:
             for row in DictReader(open(
@@ -117,13 +119,13 @@ class Command(BaseCommand):
                     score=row['score'],
                     pub_date=row['pub_date'])
             self.stdout.write(self.style.SUCCESS(
-                'Данные для Review загружены'
+                'Данные для Review загружены',
             ))
 
     def import_comments(self):
         if Comments.objects.exists():
             self.stdout.write(self.style.WARNING(
-                'Данные для Comments уже загружены'
+                'Данные для Comments уже загружены',
             ))
         else:
             for row in DictReader(open(
@@ -136,7 +138,7 @@ class Command(BaseCommand):
                     author=User.objects.get(id=row['author']),
                     pub_date=row['pub_date'])
             self.stdout.write(self.style.SUCCESS(
-                'Данные для Comments загружены'
+                'Данные для Comments загружены',
             ))
 
     def handle(self, *args, **kwargs):

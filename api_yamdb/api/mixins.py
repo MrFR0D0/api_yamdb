@@ -9,6 +9,8 @@ from api.permissions import IsAdminUserOrReadOnly
 
 class ModelMixinSet(CreateModelMixin, ListModelMixin,
                     DestroyModelMixin, GenericViewSet):
+    """Миксин для создания/просмотра/удаления объекта."""
+
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
@@ -16,6 +18,8 @@ class ModelMixinSet(CreateModelMixin, ListModelMixin,
 
 
 class UpdateMixin:
+    """Миксин для собновления объекта."""
+
     def update(self, request, *args, **kwargs):
         """Отключает метод PUT, поддерживается только PATCH."""
         if request.method == 'PUT':
