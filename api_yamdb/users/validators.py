@@ -20,17 +20,17 @@ def username_validator(value):
             ),
         )
 
-    if value == settings.NOT_ALLOWED_USERNAME:
+    if value == constants.NOT_ALLOWED_USERNAME:
         raise ValidationError(
-            f'Использовать имя   "{settings.NOT_ALLOWED_USERNAME}" в качестве '
+            f'Использовать имя   "{constants.NOT_ALLOWED_USERNAME}" в качестве '
             'username запрещено.',
         )
 
 
 def validate_username(username):
     """Функция для проверка имени пользователя."""
-    if username == settings.NOT_ALLOWED_USERNAME:
+    if username == constants.NOT_ALLOWED_USERNAME:
         raise serializers.ValidationError(
-            f'Имя "{settings.NOT_ALLOWED_USERNAME}" для username запрещено.',
+            f'Имя "{constants.NOT_ALLOWED_USERNAME}" для username запрещено.',
         )
     return username

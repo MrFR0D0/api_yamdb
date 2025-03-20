@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -60,6 +59,3 @@ class User(AbstractUser):
     @property
     def is_admin(self):
         return self.role == self.ADMIN or self.is_staff
-
-
-User = get_user_model()

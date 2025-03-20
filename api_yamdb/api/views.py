@@ -5,6 +5,10 @@ from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.conf import settings
+from api_yamdb import constants
 from rest_framework.response import Response
 
 from api.filters import FilterTitle
@@ -21,13 +25,60 @@ from users.models import User
 from users.token import get_tokens_for_user
 
 
-@api_view(('POST',))
-@permission_classes((AllowAny,))
+class UsersViewSet(viewsets.ModelViewSet):
+    """Вьюсет для пользователей."""
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsAdminOrStaff,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('=username',)
+    lookup_field = 'username'
+    http_method_names = ('get', 'post', 'patch', 'delete')
+
+    @action(
+        methods=('get', 'patch'), detail=False,
+        permission_classes=(IsAuthenticated,),
+    )
+    def me(self, request):
+        if request.method == 'PATCH':
+            serializer = UserSerializer(
+                request.user, data=request.data, partial=True,
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(role=request.user.role)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def signup(request):
+#     """Функция для регистрации пользователя."""
+#     serializer = SignUpSerializer(data=request.data)
+#     serializer.is_valid(raise_exception=True)
+#     serializer.save()
+#     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def signup(request):
     """Функция для регистрации пользователя."""
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    serializer.save()
+    user, _ = User.objects.get_or_create(
+        email=serializer.validated_data['email'],
+        username=serializer.validated_data['username'],
+    )
+    confirmation_code = default_token_generator.make_token(user)
+    send_mail(
+        'Код подтверждения',
+        f'Ваш код подтверждения: {confirmation_code}',
+        constants.ADMIN_EMAIL,
+        [serializer.validated_data['email']],
+        fail_silently=False,
+    )
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -115,31 +166,3 @@ class CommentViewSet(UpdateMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.get_review().comments.all()
-
-
-class UsersViewSet(viewsets.ModelViewSet):
-    """Вьюсет для пользователей."""
-
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (IsAdminOrStaff,)
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('=username',)
-    lookup_field = 'username'
-    http_method_names = ('get', 'post', 'patch', 'delete')
-
-    @action(
-        methods=('get', 'patch'),
-        detail=False,
-        permission_classes=(IsAuthenticated,),
-    )
-    def me(self, request):
-        if request.method == 'PATCH':
-            serializer = UserSerializer(
-                request.user, data=request.data, partial=True,
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save(role=request.user.role)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)

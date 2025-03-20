@@ -11,6 +11,75 @@ from users.models import User
 from users.validators import validate_username
 
 
+class UserSerializer(serializers.ModelSerializer):
+    """Класс сериализатор жанров."""
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role',
+        )
+
+
+# class SignUpSerializer(serializers.ModelSerializer):
+    # """Класс сериализатора.
+
+    # Проверяет корректность данных, указанных при регистрации.
+    # """
+
+    # email = serializers.EmailField(
+    #     max_length=constants.MAX_EMAIL_LENGHT,
+    #     required=True,
+    # )
+    # username = serializers.RegexField(
+    #     regex=constants.USERNAME_CHECK,
+    #     max_length=constants.MAX_USERNAME_LENGHT,
+    #     validators=[validate_username],
+    # )
+
+    # class Meta:
+    #     model = User
+    #     fields = ('email', 'username')
+
+    # def validate(self, data):
+    #     username = data.get('username')
+    #     email = data.get('email')
+    #     user_exists = User.objects.filter(username=username).exists()
+    #     email_exists = User.objects.filter(email=email).exists()
+    #     if user_exists:
+    #         user = User.objects.get(username=username)
+    #         if user.email != email:
+    #             raise serializers.ValidationError(
+    #                 {'detail': 'Неверно указан email пользователя'},
+    #                 status.HTTP_400_BAD_REQUEST,
+    #             )
+    #     if email_exists:
+    #         user = User.objects.get(email=email)
+    #         if user.username != username:
+    #             raise serializers.ValidationError(
+    #                 {'detail': 'Пользователь с таким email уже существует'},
+    #                 status.HTTP_400_BAD_REQUEST,
+    #             )
+    #     return data
+
+    # def create(self, validated_data):
+    #     user, created = User.objects.get_or_create(
+    #         email=validated_data['email'],
+    #         username=validated_data['username'],
+    #     )
+    #     confirmation_code = default_token_generator.make_token(user)
+    #     send_mail(
+    #         'Код подтверждения',
+    #         f'Ваш код подтверждения: {confirmation_code}',
+    #         settings.ADMIN_EMAIL,
+    #         [validated_data['email']],
+    #         fail_silently=False,
+    #     )
+
+    #     return user
+
+
 class SignUpSerializer(serializers.ModelSerializer):
     """Класс сериализатора.
 
@@ -25,11 +94,21 @@ class SignUpSerializer(serializers.ModelSerializer):
         regex=constants.USERNAME_CHECK,
         max_length=constants.MAX_USERNAME_LENGHT,
         validators=[validate_username],
+        required=True,
+    )
+    confirmation_code = serializers.CharField(
+        required=False,
     )
 
     class Meta:
         model = User
-        fields = ('email', 'username')
+        fields = ('email', 'username', 'confirmation_code')
+        extra_kwargs = {
+            'confirmation_code': {
+                'write_only': True,
+            },
+
+        }
 
     def validate(self, data):
         username = data.get('username')
@@ -52,22 +131,6 @@ class SignUpSerializer(serializers.ModelSerializer):
                 )
         return data
 
-    def create(self, validated_data):
-        user, created = User.objects.get_or_create(
-            email=validated_data['email'],
-            username=validated_data['username'],
-        )
-        confirmation_code = default_token_generator.make_token(user)
-        send_mail(
-            'Код подтверждения',
-            f'Ваш код подтверждения: {confirmation_code}',
-            settings.ADMIN_EMAIL,
-            [validated_data['email']],
-            fail_silently=False,
-        )
-
-        return user
-
 
 class AuthTokenSerializer(serializers.Serializer):
     """Класс сериализатора.
@@ -80,20 +143,21 @@ class AuthTokenSerializer(serializers.Serializer):
         max_length=constants.MAX_USERNAME_LENGHT,
         required=True,
     )
+    confirmation_code = serializers.CharField()
 
     def validate(self, data):
         user = get_object_or_404(
             User,
             username=data['username'],
         )
-        token = data.get('token')
-        if not token:
+        confirmation_code = data.get('confirmation_code')
+        if not confirmation_code:
             raise serializers.ValidationError(
-                {'token': 'Токен не может быть пустым.'},
+                {'confirmation_code': 'Код подтверждения не может быть пустым.'},
             )
-        if not default_token_generator.check_token(user, token):
+        if not default_token_generator.check_token(user, confirmation_code):
             raise serializers.ValidationError(
-                {'token': 'Ошибка токена.'},
+                {'confirmation_code': 'Ошибка токена.'},
             )
         data['user'] = user
         return data
@@ -218,14 +282,3 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ('id', 'text', 'author', 'pub_date')
-
-
-class UserSerializer(serializers.ModelSerializer):
-    """Класс сериализатор жанров."""
-
-    class Meta:
-        model = User
-        fields = (
-            'username', 'email', 'first_name',
-            'last_name', 'bio', 'role',
-        )
